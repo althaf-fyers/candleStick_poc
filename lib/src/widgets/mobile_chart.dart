@@ -1,15 +1,16 @@
 import 'dart:math';
+
+import 'package:flutter/material.dart';
+
+import 'package:candlesticks/src/constant/scales.dart';
 import 'package:candlesticks/src/constant/view_constants.dart';
 import 'package:candlesticks/src/theme/theme_data.dart';
-import 'package:candlesticks/src/utils/helper_functions.dart';
 import 'package:candlesticks/src/widgets/candle_info_text.dart';
 import 'package:candlesticks/src/widgets/candle_stick_widget.dart';
-import 'package:candlesticks/src/widgets/price_column.dart';
+import 'package:candlesticks/src/widgets/interval_bar.dart';
 import 'package:candlesticks/src/widgets/time_row.dart';
-import 'package:candlesticks/src/widgets/volume_widget.dart';
-import 'package:flutter/material.dart';
+
 import '../models/candle.dart';
-import 'package:candlesticks/src/constant/scales.dart';
 import 'dash_line.dart';
 
 /// This widget manages gestures
@@ -19,7 +20,6 @@ import 'dash_line.dart';
 class MobileChart extends StatefulWidget {
   /// onScaleUpdate callback
   /// called when user scales chart using buttons or scale gesture
-  final Function onScaleUpdate;
 
   /// onHorizontalDragUpdate
   /// callback calls when user scrolls horizontally along the chart
@@ -39,15 +39,20 @@ class MobileChart extends StatefulWidget {
   final void Function(double) onPanDown;
   final void Function() onPanEnd;
 
+  final void Function(String) onIntervalChange;
+  final List<String> intervals;
+
   MobileChart({
-    required this.onScaleUpdate,
+    Key? key,
     required this.onHorizontalDragUpdate,
     required this.candleWidth,
     required this.candles,
     required this.index,
     required this.onPanDown,
     required this.onPanEnd,
-  });
+    required this.onIntervalChange,
+    required this.intervals,
+  }) : super(key: key);
 
   @override
   State<MobileChart> createState() => _MobileChartState();
@@ -76,6 +81,7 @@ class _MobileChartState extends State<MobileChart> {
       builder: (context, constraints) {
         // determine charts width and height
         final double maxWidth = constraints.maxWidth - PRICE_BAR_WIDTH;
+        // final double maxWidth = constraints.maxWidth;
         final double maxHeight = constraints.maxHeight - DATE_BAR_HEIGHT;
 
         // visible candles start and end indexes
@@ -137,246 +143,184 @@ class _MobileChartState extends State<MobileChart> {
                         widget.candles.length - 1)];
                 return Container(
                   color: Theme.of(context).background,
-                  child: Stack(
+                  child: Column(
                     children: [
-                      TimeRow(
-                        indicatorX: longPressX,
-                        candles: widget.candles,
-                        candleWidth: widget.candleWidth,
-                        indicatorTime: currentCandle?.date,
-                        index: widget.index,
-                      ),
-                      Column(
-                        children: [
-                          Expanded(
-                            flex: 3,
-                            child: Stack(
-                              children: [
-                                PriceColumn(
-                                  low: candlesLowPrice,
-                                  high: candlesHighPrice,
-                                  priceScale: priceScale,
-                                  width: constraints.maxWidth,
-                                  chartHeight: chartHeight,
-                                  lastCandle: widget.candles[
-                                      widget.index < 0 ? 0 : widget.index],
-                                  onScale: (delta) {
-                                    setState(() {
-                                      additionalVerticalPadding += delta;
-                                    });
-                                  },
-                                  additionalVerticalPadding:
-                                      additionalVerticalPadding,
-                                ),
-                                Row(
-                                  children: [
-                                    Expanded(
-                                      child: Container(
-                                        decoration: BoxDecoration(
-                                          border: Border(
-                                            right: BorderSide(
-                                              color:
-                                                  Theme.of(context).grayColor,
-                                              width: 1,
-                                            ),
-                                          ),
-                                        ),
-                                        child: AnimatedPadding(
-                                          duration: Duration(milliseconds: 200),
-                                          padding: EdgeInsets.symmetric(
-                                              vertical:
-                                                  MAIN_CHART_VERTICAL_PADDING +
-                                                      additionalVerticalPadding),
-                                          child: RepaintBoundary(
-                                            child: CandleStickWidget(
-                                              candles: widget.candles,
-                                              candleWidth: widget.candleWidth,
-                                              index: widget.index,
-                                              high: high,
-                                              low: low,
-                                              bearColor:
-                                                  Theme.of(context).primaryRed,
-                                              bullColor: Theme.of(context)
-                                                  .primaryGreen,
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                    SizedBox(
-                                      width: PRICE_BAR_WIDTH,
-                                    ),
-                                  ],
-                                ),
-                              ],
+                      Expanded(
+                        flex: 6,
+                        child: Stack(
+                          children: [
+                            TimeRow(
+                              indicatorX: longPressX,
+                              candles: widget.candles,
+                              candleWidth: widget.candleWidth,
+                              indicatorTime: currentCandle?.date,
+                              index: widget.index,
                             ),
-                          ),
-                          Expanded(
-                            flex: 1,
-                            child: Row(
+                            Column(
                               children: [
                                 Expanded(
-                                  child: Container(
-                                    decoration: BoxDecoration(
-                                      border: Border(
-                                        right: BorderSide(
-                                          color: Theme.of(context).grayColor,
-                                          width: 1,
-                                        ),
-                                      ),
-                                    ),
-                                    child: Padding(
-                                      padding: const EdgeInsets.only(top: 10.0),
-                                      child: VolumeWidget(
-                                        candles: widget.candles,
-                                        barWidth: widget.candleWidth,
-                                        index: widget.index,
-                                        high:
-                                            HelperFunctions.getRoof(volumeHigh),
-                                        bearColor:
-                                            Theme.of(context).secondaryRed,
-                                        bullColor:
-                                            Theme.of(context).secondaryGreen,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                SizedBox(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
+                                  child: Row(
                                     children: [
-                                      SizedBox(
-                                        height: DATE_BAR_HEIGHT,
-                                        child: Center(
-                                          child: Row(
-                                            children: [
-                                              Text(
-                                                "-${HelperFunctions.addMetricPrefix(HelperFunctions.getRoof(volumeHigh))}",
-                                                style: TextStyle(
-                                                  color: Theme.of(context)
-                                                      .grayColor,
-                                                  fontSize: 12,
-                                                ),
+                                      Expanded(
+                                        child: Container(
+                                          child: AnimatedPadding(
+                                            duration:
+                                                Duration(milliseconds: 200),
+                                            padding: EdgeInsets.symmetric(
+                                                vertical:
+                                                    MAIN_CHART_VERTICAL_PADDING +
+                                                        additionalVerticalPadding),
+                                            child: RepaintBoundary(
+                                              child: CandleStickWidget(
+                                                candles: widget.candles,
+                                                candleWidth:
+                                                    widget.candleWidth,
+                                                index: widget.index,
+                                                high: high,
+                                                low: low,
+                                                bearColor:
+                                                    Theme.of(context)
+                                                        .primaryRed,
+                                                bullColor:
+                                                    Theme.of(context)
+                                                        .primaryGreen,
                                               ),
-                                            ],
+                                            ),
                                           ),
                                         ),
                                       ),
                                     ],
                                   ),
-                                  width: 50,
                                 ),
                               ],
                             ),
-                          ),
-                          SizedBox(
-                            height: DATE_BAR_HEIGHT,
-                          ),
-                        ],
-                      ),
-                      longPressY != null
-                          ? Positioned(
-                              top: longPressY! - 10,
-                              child: Row(
-                                children: [
-                                  DashLine(
-                                    length: maxWidth,
-                                    color: Theme.of(context).grayColor,
-                                    direction: Axis.horizontal,
-                                    thickness: 0.5,
-                                  ),
-                                  Container(
-                                    color: Theme.of(context)
-                                        .hoverIndicatorBackgroundColor,
-                                    child: Center(
-                                      child: Text(
-                                        longPressY! < maxHeight * 0.75
-                                            ? HelperFunctions.priceToString(
-                                                high -
-                                                    (longPressY! - 20) /
-                                                        (maxHeight * 0.75 -
-                                                            40) *
-                                                        (high - low))
-                                            : HelperFunctions.addMetricPrefix(
-                                                HelperFunctions.getRoof(
-                                                        volumeHigh) *
-                                                    (1 -
-                                                        (longPressY! -
-                                                                maxHeight *
-                                                                    0.75 -
-                                                                10) /
-                                                            (maxHeight * 0.25 -
-                                                                10))),
-                                        style: TextStyle(
-                                          color: Theme.of(context)
-                                              .hoverIndicatorTextColor,
-                                          fontSize: 12,
+
+                            // longPressY != null
+                            //     ? Positioned(
+                            //         top: longPressY! - 10,
+                            //         child: Row(
+                            //           children: [
+                            //             // DashLine(
+                            //             //   length: maxWidth,
+                            //             //   color: Theme.of(context).grayColor,
+                            //             //   direction: Axis.horizontal,
+                            //             //   thickness: 0.5,
+                            //             // ),
+                            //             // Container(
+                            //             //   color: Theme.of(context)
+                            //             //       .hoverIndicatorBackgroundColor,
+                            //             //   child: Center(
+                            //             //     child: Text(
+                            //             //       longPressY! < maxHeight * 0.75
+                            //             //           ? HelperFunctions.priceToString(
+                            //             //               high -
+                            //             //                   (longPressY! - 20) /
+                            //             //                       (maxHeight * 0.75 -
+                            //             //                           40) *
+                            //             //                       (high - low))
+                            //             //           : HelperFunctions.addMetricPrefix(
+                            //             //               HelperFunctions.getRoof(
+                            //             //                       volumeHigh) *
+                            //             //                   (1 -
+                            //             //                       (longPressY! -
+                            //             //                               maxHeight *
+                            //             //                                   0.75 -
+                            //             //                               10) /
+                            //             //                           (maxHeight * 0.25 -
+                            //             //                               10))),
+                            //             //       style: TextStyle(
+                            //             //         color: Theme.of(context)
+                            //             //             .hoverIndicatorTextColor,
+                            //             //         fontSize: 12,
+                            //             //       ),
+                            //             //     ),
+                            //             //   ),
+                            //             //   width: 50,
+                            //             //   height: 20,
+                            //             // ),
+                            //           ],
+                            //         ),
+                            //       )
+                            //     : Container(),
+                            longPressX != null
+                                ? Positioned(
+                                    child: Container(
+                                      width: widget.candleWidth,
+                                      height: maxHeight,
+                                      child: Center(
+                                        child: DashLine(
+                                          length: maxHeight,
+                                          color: Theme.of(context).grayColor,
+                                          direction: Axis.vertical,
+                                          thickness: 1.0,
                                         ),
                                       ),
                                     ),
-                                    width: 50,
-                                    height: 20,
-                                  ),
-                                ],
+
+                                    right: (maxWidth - longPressX!) ~/
+                                            widget.candleWidth *
+                                            widget.candleWidth +
+                                        PRICE_BAR_WIDTH,
+                                  )
+                                : Container(),
+
+                            /// Candle Information is displayed in the below widget
+                            currentCandle != null
+                                ? Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                        vertical: 24, horizontal: 24),
+                                    child:
+                                        CandleInfoText(candle: currentCandle),
+                                  )
+                                : Container(),
+                            Padding(
+                              padding:
+                                  const EdgeInsets.only(right: 0, bottom: 20),
+                              child: GestureDetector(
+                                onTapDown: (TapDownDetails details) {
+                                  setState(() {
+                                    longPressX = details.localPosition.dx;
+                                    longPressY = details.localPosition.dy;
+                                  });
+                                },
+                                onTapUp: (TapUpDetails details) {
+                                  setState(() {
+                                    longPressX = null;
+                                    longPressY = null;
+                                  });
+                                },
+                                onTapCancel: () {
+                                  setState(() {
+                                    longPressX = null;
+                                    longPressY = null;
+                                  });
+                                },
+                                onHorizontalDragStart:
+                                    (DragStartDetails details) {
+                                  setState(() {
+                                    longPressX = details.localPosition.dx;
+                                    longPressY = details.localPosition.dy;
+                                  });
+                                },
+                                onHorizontalDragUpdate:
+                                    (DragUpdateDetails details) {
+                                  setState(() {
+                                    longPressX = details.localPosition.dx;
+                                    longPressY = details.localPosition.dy;
+                                  });
+                                },
+                                behavior: HitTestBehavior.translucent,
                               ),
                             )
-                          : Container(),
-                      longPressX != null
-                          ? Positioned(
-                              child: Container(
-                                width: widget.candleWidth,
-                                height: maxHeight,
-                                color: Theme.of(context).gold.withOpacity(0.2),
-                              ),
-                              right: (maxWidth - longPressX!) ~/
-                                      widget.candleWidth *
-                                      widget.candleWidth +
-                                  PRICE_BAR_WIDTH,
-                            )
-                          : Container(),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(
-                            vertical: 4, horizontal: 12),
-                        child: currentCandle != null
-                            ? CandleInfoText(candle: currentCandle)
-                            : null,
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.only(right: 50, bottom: 20),
-                        child: GestureDetector(
-                          onPanUpdate: (update) {
-                            widget.onHorizontalDragUpdate(
-                                update.localPosition.dx);
-                          },
-                          onPanEnd: (update) {
-                            widget.onPanEnd();
-                          },
-                          onLongPressEnd: (_) {
-                            setState(() {
-                              longPressX = null;
-                              longPressY = null;
-                            });
-                          },
-                          onLongPressStart: (LongPressStartDetails details) {
-                            setState(() {
-                              longPressX = details.localPosition.dx;
-                              longPressY = details.localPosition.dy;
-                            });
-                          },
-                          behavior: HitTestBehavior.translucent,
-                          onLongPressMoveUpdate:
-                              (LongPressMoveUpdateDetails details) {
-                            setState(() {
-                              longPressX = details.localPosition.dx;
-                              longPressY = details.localPosition.dy;
-                            });
-                          },
-                          onPanDown: (update) {
-                            widget.onPanDown(update.localPosition.dx);
-                          },
+                          ],
                         ),
-                      )
+                      ),
+                      Expanded(
+                        flex: 1,
+                        child: IntervalBar(
+                            onIntervalChange: widget.onIntervalChange,
+                            intervals: widget.intervals),
+                      ),
                     ],
                   ),
                 );

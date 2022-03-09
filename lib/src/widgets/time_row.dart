@@ -73,7 +73,7 @@ class _TimeRowState extends State<TimeRow> {
   /// Hour/minute text widget
   Text _hourMinuteText(DateTime _time, Color color) {
     return Text(
-      numberFormat(_time.hour) + ":" + numberFormat(_time.minute),
+      numberFormat(_time.hour) + " h :" + numberFormat(_time.minute) + " min",
       style: TextStyle(
         color: color,
         fontSize: 12,
@@ -96,59 +96,58 @@ class _TimeRowState extends State<TimeRow> {
   Widget build(BuildContext context) {
     int step = _stepCalculator();
     final dif = widget.candles[0].date.difference(widget.candles[step].date);
-    return Padding(
-      padding: const EdgeInsets.only(right: 51.0),
-      child: Stack(
-        children: [
-          ListView.builder(
-            physics: NeverScrollableScrollPhysics(),
-            itemCount: widget.candles.length,
-            scrollDirection: Axis.horizontal,
-            itemExtent: step * widget.candleWidth,
-            controller: _scrollController,
-            reverse: true,
-            itemBuilder: (context, index) {
-              DateTime _time = _timeCalculator(step, index, dif);
-              return Column(
-                mainAxisSize: MainAxisSize.max,
-                children: [
-                  Expanded(
-                    child: Container(
-                      width: 0.05,
-                      color: Theme.of(context).grayColor,
-                    ),
-                  ),
-                  dif.compareTo(Duration(days: 1)) > 0
-                      ? _monthDayText(
-                          _time, Theme.of(context).scaleNumbersColor)
-                      : _hourMinuteText(
-                          _time, Theme.of(context).scaleNumbersColor),
-                ],
-              );
-            },
-          ),
-          widget.indicatorX == null
-              ? Container()
-              : Positioned(
-                  bottom: 0,
-                  left: math.max(widget.indicatorX! - 50, 0),
-                  child: Container(
-                    color: Theme.of(context).hoverIndicatorBackgroundColor,
-                    child: Center(
-                      child: Text(
-                        dateFormatter(widget.indicatorTime!),
-                        style: TextStyle(
-                          color: Theme.of(context).hoverIndicatorTextColor,
-                          fontSize: 12,
-                        ),
+    return Stack(
+      children: [
+        // ListView.builder(
+        //   physics: NeverScrollableScrollPhysics(),
+        //   itemCount: widget.candles.length,
+        //   scrollDirection: Axis.horizontal,
+        //   itemExtent: step * widget.candleWidth,
+        //   controller: _scrollController,
+        //   reverse: true,
+        //   itemBuilder: (context, index) {
+        //     return Container();
+        //     // DateTime _time = _timeCalculator(step, index, dif);
+        //     // return Column(
+        //     //   mainAxisSize: MainAxisSize.max,
+        //     //   children: [
+        //     //     Expanded(
+        //     //       child: Container(
+        //     //         width: 0.05,
+        //     //         color: Theme.of(context).gold,
+        //     //       ),
+        //     //     ),
+        //     //     dif.compareTo(Duration(days: 1)) > 0
+        //     //         ? _monthDayText(
+        //     //             _time, Theme.of(context).scaleNumbersColor)
+        //     //         : _hourMinuteText(
+        //     //             _time, Theme.of(context).scaleNumbersColor),
+        //     //   ],
+        //     // );
+        //   },
+        // ),
+        widget.indicatorX == null
+            ? Container()
+            : Positioned(
+                // bottom: 0,
+                left: math.max(widget.indicatorX! - 50, 0),
+                // child: Container(),
+                child: Container(
+                  color: Theme.of(context).hoverIndicatorBackgroundColor,
+                  child: Center(
+                    child: Text(
+                      dateFormatter(widget.indicatorTime!),
+                      style: TextStyle(
+                        color: Theme.of(context).hoverIndicatorTextColor,
+                        fontSize: 12,
                       ),
                     ),
-                    width: 100,
-                    height: 20,
                   ),
+                  width: 100,
+                  height: 20,
                 ),
-        ],
-      ),
+              ),
+      ],
     );
   }
 }

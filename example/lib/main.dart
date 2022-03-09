@@ -6,7 +6,10 @@ import 'package:candlesticks/candlesticks.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
 void main() {
-  runApp(MyApp());
+  runApp(MaterialApp(
+      theme: ThemeData.light(),
+      debugShowCheckedModeBanner: false,
+      home: MyApp()));
 }
 
 class MyApp extends StatefulWidget {
@@ -19,7 +22,7 @@ class _MyAppState extends State<MyApp> {
   WebSocketChannel? _channel;
   bool isDark = false;
 
-  String interval = "1m";
+  String interval = "1d";
 
   void binanceFetch(String interval) {
     fetchCandles(symbol: "XRPUSDT", interval: interval).then(
@@ -47,7 +50,7 @@ class _MyAppState extends State<MyApp> {
 
   @override
   void initState() {
-    binanceFetch("1m");
+    binanceFetch("1d");
     super.initState();
   }
 
@@ -88,40 +91,43 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      theme: isDark ? ThemeData.dark() : ThemeData.light(),
-      debugShowCheckedModeBanner: false,
-      home: Scaffold(
-        appBar: AppBar(
-          title: Text("candleSticks"),
-          actions: [
-            IconButton(
-              onPressed: () {
-                setState(() {
-                  isDark = !isDark;
-                });
-              },
-              icon: Icon(
-                isDark ? Icons.wb_sunny_sharp : Icons.nightlight_round_outlined,
-              ),
-            )
-          ],
-        ),
-        body: Center(
-          child: StreamBuilder(
-            stream: _channel == null ? null : _channel!.stream,
-            builder: (context, snapshot) {
-              updateCandlesFromSnapshot(snapshot);
-              return Candlesticks(
-                onIntervalChange: (String value) async {
-                  binanceFetch(value);
-                },
-                candles: candles,
-                interval: interval,
-              );
+    return Scaffold(
+      appBar: AppBar(
+        title: Text("candleSticks"),
+        actions: [
+          IconButton(
+            onPressed: () {
+              setState(() {
+                isDark = !isDark;
+              });
             },
+            icon: Icon(
+              isDark ? Icons.wb_sunny_sharp : Icons.nightlight_round_outlined,
+            ),
+          )
+        ],
+      ),
+      body: Column(
+        children: [
+          Container(
+            height: MediaQuery.of(context).size.height * 0.50,
+            child: Center(
+              child: StreamBuilder(
+                stream: _channel == null ? null : _channel!.stream,
+                builder: (context, snapshot) {
+                  updateCandlesFromSnapshot(snapshot);
+                  return Candlesticks(
+                    onIntervalChange: (String value) async {
+                      binanceFetch(value);
+                    },
+                    candles: candles,
+                    interval: interval,
+                  );
+                },
+              ),
+            ),
           ),
-        ),
+        ],
       ),
     );
   }

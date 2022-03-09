@@ -2,9 +2,6 @@ import 'dart:math';
 import 'package:candlesticks/src/constant/intervals.dart';
 import 'package:candlesticks/src/models/candle.dart';
 import 'package:candlesticks/src/widgets/mobile_chart.dart';
-import 'package:candlesticks/src/widgets/web_chart.dart';
-import 'package:candlesticks/src/widgets/toolbar.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'models/candle.dart';
 
@@ -52,9 +49,9 @@ class _CandlesticksState extends State<Candlesticks> {
 
   /// candleWidth controls the width of the single candles.
   ///  range: [2...10]
-  double candleWidth = 6;
+  double candleWidth = 10.0;
 
-  bool showIntervals = false;
+  bool showIntervals = true;
 
   @override
   Widget build(BuildContext context) {
@@ -64,29 +61,51 @@ class _CandlesticksState extends State<Candlesticks> {
       );
     return Column(
       children: [
-        ToolBar(
-            onZoomInPressed: () {
-              setState(() {
-                candleWidth += 2;
-                candleWidth = min(candleWidth, 10);
-              });
-            },
-            onZoomOutPressed: () {
-              setState(() {
-                candleWidth -= 2;
-                candleWidth = max(candleWidth, 2);
-              });
-            },
-            interval: widget.interval,
-            intervals: widget.intervals ?? intervals,
-            onIntervalChange: widget.onIntervalChange),
+        // ToolBar(
+        //     onZoomInPressed: () {
+        //       setState(() {
+        //         candleWidth += 2;
+        //         candleWidth = min(candleWidth, 10);
+        //       });
+        //     },
+        //     onZoomOutPressed: () {
+        //       setState(() {
+        //         candleWidth -= 2;
+        //         candleWidth = max(candleWidth, 2);
+        //       });
+        //     },
+        //     interval: widget.interval,
+        //     intervals: widget.intervals ?? intervals,
+        //     onIntervalChange: widget.onIntervalChange),
         Expanded(
           child: TweenAnimationBuilder(
             tween: Tween(begin: 6.toDouble(), end: candleWidth),
             duration: Duration(milliseconds: 300),
             curve: Curves.easeInOutCirc,
             builder: (_, width, __) {
-              return kIsWeb
+              return MobileChart(
+                onIntervalChange: widget.onIntervalChange,
+                intervals: widget.intervals ?? intervals,
+                onPanEnd: () {
+                  lastIndex = index;
+                },
+                onHorizontalDragUpdate: (double x) {
+                  setState(() {
+                    x = x - lastX;
+                    index = lastIndex + x ~/ candleWidth;
+                    index = max(index, -10);
+                    index = min(index, widget.candles.length - 1);
+                  });
+                },
+                onPanDown: (double value) {
+                  lastX = value;
+                  lastIndex = index;
+                },
+                candleWidth: width as double,
+                candles: widget.candles,
+                index: index,
+              );
+              /* kIsWeb
                   ? WebChart(
                       onScaleUpdate: (double scale) {
                         setState(() {
@@ -116,14 +135,8 @@ class _CandlesticksState extends State<Candlesticks> {
                       index: index,
                     )
                   : MobileChart(
-                      onScaleUpdate: (double scale) {
-                        setState(() {
-                          candleWidth *= scale;
-                          candleWidth = min(candleWidth, 10);
-                          candleWidth = max(candleWidth, 2);
-                          candleWidth.toInt();
-                        });
-                      },
+                      onIntervalChange: widget.onIntervalChange,
+                      intervals: widget.intervals ?? intervals,
                       onPanEnd: () {
                         lastIndex = index;
                       },
@@ -142,7 +155,7 @@ class _CandlesticksState extends State<Candlesticks> {
                       candleWidth: width as double,
                       candles: widget.candles,
                       index: index,
-                    );
+                    ); */
             },
           ),
         ),

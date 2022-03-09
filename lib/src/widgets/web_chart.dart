@@ -1,11 +1,10 @@
-import 'dart:math';
+/* import 'dart:math';
 import 'package:candlesticks/src/constant/view_constants.dart';
 import 'package:candlesticks/src/theme/theme_data.dart';
 import 'package:candlesticks/src/utils/helper_functions.dart';
 import 'package:candlesticks/src/widgets/candle_info_text.dart';
 import 'package:candlesticks/src/widgets/candle_stick_widget.dart';
 import 'package:candlesticks/src/widgets/price_column.dart';
-import 'package:candlesticks/src/widgets/time_row.dart';
 import 'package:candlesticks/src/widgets/volume_widget.dart';
 import 'package:flutter/material.dart';
 import '../models/candle.dart';
@@ -390,3 +389,4 @@ class _WebChartState extends State<WebChart> {
     );
   }
 }
+ */
